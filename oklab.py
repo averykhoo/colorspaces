@@ -85,14 +85,46 @@ def ok_distance(rgb_1, rgb_2):
     return 200 * (((l1 - l2) / 2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2) ** 0.5
 
 
+def ok_interpolate(rgb_1, rgb_2, steps):
+    assert steps >= 2
+    l1, a1, b1 = srgb_to_oklab(*rgb_1)
+    l1 = toe(l1)
+    l2, a2, b2 = srgb_to_oklab(*rgb_2)
+    l2 = toe(l2)
+
+    def interpolate(x, y, steps):
+        delta = y - x / (steps - 1)
+        out = [x + i * delta for i in range(steps)]
+        out[-1] = y
+        return out
+
+    l_s = interpolate(l1, l2, steps)
+    a_s = interpolate(a1, a2, steps)
+    b_s = interpolate(b1, b2, steps)
+
+    return [oklab_to_srgb(toe_inv(l), a, b)
+            for l, a, b in zip(l_s, a_s, b_s)]
+
+
+def rgb_to_hex(r, g, b):
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+
+def hex_to_rgb(code):
+    if code[0] == '#':
+        code = code[1:]
+    assert len(code) == 6
+    return int(code[:2], 16), int(code[2:4], 16), int(code[4:], 16)
+
+
 if __name__ == '__main__':
-    white = (255, 255, 255)
-    black = (0, 0, 0)
-    red = (255, 0, 0)
-    green = (0, 255, 0)
-    blue = (0, 0, 255)
-    aqua = (0, 255, 255)
-    teal = (0, 128, 128)
+    white = hex_to_rgb('#ffffff')
+    black = hex_to_rgb('#000000')
+    red = hex_to_rgb('#ff0000')
+    green = hex_to_rgb('#00ff00')
+    blue = hex_to_rgb('#0000ff')
+    aqua = hex_to_rgb('#00ffff')
+    teal = hex_to_rgb('#008080')
 
     print(ok_distance(white, black))
     print(ok_distance(red, green))
@@ -101,3 +133,5 @@ if __name__ == '__main__':
     print(ok_distance(blue, teal))
     print(ok_distance(green, aqua))
     print(ok_distance(green, teal))
+
+
