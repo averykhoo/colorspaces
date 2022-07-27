@@ -1,3 +1,4 @@
+import json
 import math
 
 
@@ -55,7 +56,7 @@ def oklab_to_srgb(L, a, b):
     g = linear_srgb_to_srgb(g) * 255
     b = linear_srgb_to_srgb(b) * 255
 
-    return r, g, b
+    return int(max(min(r, 255), 0)), int(max(min(g, 255), 0)), int(max(min(b, 255), 0))
 
 
 def toe(x):
@@ -85,18 +86,19 @@ def ok_distance(rgb_1, rgb_2):
     return 200 * (((l1 - l2) / 2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2) ** 0.5
 
 
+def interpolate(x, y, steps):
+    delta = (y - x) / (steps - 1)
+    out = [x + i * delta for i in range(steps)]
+    out[-1] = y
+    return out
+
+
 def ok_interpolate(rgb_1, rgb_2, steps):
     assert steps >= 2
     l1, a1, b1 = srgb_to_oklab(*rgb_1)
     l1 = toe(l1)
     l2, a2, b2 = srgb_to_oklab(*rgb_2)
     l2 = toe(l2)
-
-    def interpolate(x, y, steps):
-        delta = y - x / (steps - 1)
-        out = [x + i * delta for i in range(steps)]
-        out[-1] = y
-        return out
 
     l_s = interpolate(l1, l2, steps)
     a_s = interpolate(a1, a2, steps)
@@ -117,21 +119,40 @@ def hex_to_rgb(code):
     return int(code[:2], 16), int(code[2:4], 16), int(code[4:], 16)
 
 
+def interpolate_hex(hex_1, hex_2, steps):
+    print(hex_1, hex_2)
+    return list(rgb_to_hex(*rgb) for rgb in ok_interpolate(hex_to_rgb(hex_1), hex_to_rgb(hex_2), steps))
+
+
 if __name__ == '__main__':
-    white = hex_to_rgb('#ffffff')
-    black = hex_to_rgb('#000000')
-    red = hex_to_rgb('#ff0000')
-    green = hex_to_rgb('#00ff00')
-    blue = hex_to_rgb('#0000ff')
-    aqua = hex_to_rgb('#00ffff')
-    teal = hex_to_rgb('#008080')
+    # white = hex_to_rgb('#ffffff')
+    # black = hex_to_rgb('#000000')
+    # red = hex_to_rgb('#ff0000')
+    # green = hex_to_rgb('#00ff00')
+    # blue = hex_to_rgb('#0000ff')
+    # aqua = hex_to_rgb('#00ffff')
+    # teal = hex_to_rgb('#008080')
+    # print(ok_distance(white, black))
+    # print(ok_distance(red, green))
+    # print(ok_distance(blue, green))
+    # print(ok_distance(blue, aqua))
+    # print(ok_distance(blue, teal))
+    # print(ok_distance(green, aqua))
+    # print(ok_distance(green, teal))
+    #
+    with open('actual-colors.json') as f:
+        all_colors = json.load(f)
 
-    print(ok_distance(white, black))
-    print(ok_distance(red, green))
-    print(ok_distance(blue, green))
-    print(ok_distance(blue, aqua))
-    print(ok_distance(blue, teal))
-    print(ok_distance(green, aqua))
-    print(ok_distance(green, teal))
+    out = dict()
+    color_names = list(all_colors.keys())
+    for i, color_1 in enumerate(color_names[1:]):
+        for color_2 in color_names[1:]:
+            if color_1!=color_2:
+                palette_name = f'{color_1}-{color_2}'
+                print(palette_name)
+                palette_colors = interpolate_hex(all_colors[color_1][2], all_colors[color_2][2], 11)
+                print(palette_colors)
+                out[palette_name] = palette_colors
 
-
+    with open('interpolated-colors.json', 'w') as f:
+        json.dump(out, f, indent=4)
