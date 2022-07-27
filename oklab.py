@@ -108,6 +108,16 @@ def ok_interpolate(rgb_1, rgb_2, steps):
             for l, a, b in zip(l_s, a_s, b_s)]
 
 
+def rgb_interpolate(rgb_1, rgb_2, steps):
+    assert steps >= 2
+
+    r_s = map(int, interpolate(rgb_1[0], rgb_2[0], steps))
+    g_s = map(int, interpolate(rgb_1[1], rgb_2[1], steps))
+    b_s = map(int, interpolate(rgb_1[2], rgb_2[2], steps))
+
+    return list(zip(r_s, g_s, b_s))
+
+
 def rgb_to_hex(r, g, b):
     return f'#{r:02x}{g:02x}{b:02x}'
 
@@ -121,6 +131,7 @@ def hex_to_rgb(code):
 
 def interpolate_hex(hex_1, hex_2, steps):
     print(hex_1, hex_2)
+    # return list(rgb_to_hex(*rgb) for rgb in rgb_interpolate(hex_to_rgb(hex_1), hex_to_rgb(hex_2), steps))
     return list(rgb_to_hex(*rgb) for rgb in ok_interpolate(hex_to_rgb(hex_1), hex_to_rgb(hex_2), steps))
 
 
