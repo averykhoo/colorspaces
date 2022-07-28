@@ -150,7 +150,7 @@ if __name__ == '__main__':
     # print(ok_distance(blue, teal))
     # print(ok_distance(green, aqua))
     # print(ok_distance(green, teal))
-    #
+
     with open('actual-colors.json') as f:
         all_colors = json.load(f)
 
@@ -167,3 +167,5 @@ if __name__ == '__main__':
 
     with open('interpolated-colors.json', 'w') as f:
         json.dump(out, f, indent=4)
+
+    print(json.dumps({'interpolated': interpolate_hex('ed1a3b', '0c1c43', 11)}))
